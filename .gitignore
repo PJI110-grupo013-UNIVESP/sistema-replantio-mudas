@@ -1,0 +1,14 @@
+# Ambiente Virtual e Cache do Python (Backend)
+backend/venv/
+backend/__pycache__/
+*.pyc
+
+# Pacotes do Node e Builds (Frontend)
+frontend/node_modules/
+frontend/dist/
+
+# Variáveis de Ambiente e Arquivos de SO
+.env
+.DS_Store
+.idea/
+.vscode/
