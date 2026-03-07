@@ -21,3 +21,16 @@ Este projeto adota uma arquitetura moderna, englobando as seguintes tecnologias:
 * **Banco de Dados:** PostgreSQL
 * **Infraestrutura:** Docker (para conteinerização da aplicação) e Deploy em Nuvem (Cloud).
 * **Qualidade e Automação:** * Testes automatizados (Unitários e de Integração). CI/CD implementado com GitHub Actions para testes e deploy automáticos.
+
+## Como executar o projeto localmente
+
+### Pré-requisitos
+* Git
+* Docker
+* Python 3.14.3
+
+### Passo a Passo
+1. Clone o repositório:
+  ```bash
+  git clone https://github.com/PJI110-grupo013-UNIVESP/sistema-replantio-mudas.git
+  ```
