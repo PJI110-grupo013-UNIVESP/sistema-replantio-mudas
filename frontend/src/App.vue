@@ -21,11 +21,6 @@ import { RouterLink, RouterView } from 'vue-router';
       </header>
 
       <main class="content">
-        <div class="card">
-          <h3>Bem-vindo ao Sistema de Gestão de Replantio!</h3>
-          <p>O layout base do painel.</p>
-          <p></p>
-        </div>
 
         <RouterView />
       </main>
@@ -38,7 +33,7 @@ import { RouterLink, RouterView } from 'vue-router';
   margin: 1;
   padding: 1;
   box-sizing: border-box;
-  font-family: 'roboto', sans-serif;
+  font-family: 'Open Sans', 'roboto', sans-serif;
 }
 
 .card {

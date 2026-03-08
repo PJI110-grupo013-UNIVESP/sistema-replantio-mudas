@@ -24,6 +24,12 @@ onMounted(async () => {
   <div class="dashboard-container">
 
     <div class="card">
+      <h3>Bem-vindo ao Sistema de Gestão de Replantio!</h3>
+      <p>O layout base do painel.</p>
+      <p></p>
+    </div>
+
+    <div class="card">
       <h3>Visão Geral do Replantio</h3>
       <p>Este é o Dashboard principal</p>
     </div>
