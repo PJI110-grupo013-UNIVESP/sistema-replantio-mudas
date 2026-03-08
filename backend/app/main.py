@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
@@ -62,6 +62,35 @@ def create_items(muda: MudaCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_item)
     return new_item
+
+
+@app.put("/mudas/{muda_id}", response_model=MudaResponse)
+def update_item(muda_id: int,
+                muda_updated: MudaCreate,
+                db: Session = Depends(get_db)):
+    item = db.query(models.Muda).filter(models.Muda.id == muda_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    item.species = muda_updated.species
+    item.supplier = muda_updated.supplier
+    item.amount = muda_updated.amount
+    item.batch = muda_updated.batch
+
+    db.commit()
+    db.refresh(item)
+    return item
+
+
+@app.delete("/mudas/{muda_id}")
+def delete_item(muda_id: int, db: Session = Depends(get_db)):
+    item = db.query(models.Muda).filter(models.Muda.id == muda_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+
+    db.delete(item)
+    db.commit()
+    return {"message": "Item successfully deleted."}
 
 
 @app.get("/status")

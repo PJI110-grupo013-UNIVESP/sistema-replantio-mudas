@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 
 const showForm = ref(false)
 const loading = ref(true)
+const itemEditingId = ref(null)
 
 const newItem = ref({
   species: '',
@@ -31,8 +32,16 @@ const searchItem = async () => {
 
 const saveItem = async () => {
   try {
-    const response = await fetch("http://localhost:8000/mudas", {
-      method: 'POST',
+    const url = itemEditingId.value
+      ? `http://localhost:8000/mudas/${itemEditingId.value}`
+      : "http://localhost:8000/mudas"
+
+    const method = itemEditingId.value
+      ? 'PUT'
+      : 'POST'
+
+    const response = await fetch(url, {
+      method: method,
       headers: {
         'Content-Type': 'application/json'
       },
@@ -42,7 +51,12 @@ const saveItem = async () => {
     if (response.ok) {
       const itemCreated = await response.json()
 
-      mudas.value.push(itemCreated)
+      if (itemEditingId.value) {
+        const index = mudas.value.findIndex(m => m.id === itemEditingId.value)
+        mudas.value[index] = itemCreated
+      } else {
+        mudas.value.push(itemCreated)
+      }
 
       newItem.value = {
         species: '',
@@ -58,6 +72,32 @@ const saveItem = async () => {
   }
 }
 
+const editItem = (muda) => {
+  newItem.value = { ...muda }
+  itemEditingId.value = muda.id
+  showForm.value = true
+}
+
+const deleteItem = async (id) => {
+  if (!confirm("Tem certeza que deseja excluir esta muda do estoque?")) return;
+
+  try {
+    const response = await fetch(`http://localhost:8000/mudas/${id}`, { method: 'DELETE' })
+    if (response.ok) {
+      mudas.value = mudas.value.filter(m => m.id !== id)
+    }
+  } catch (error) {
+    console.error("Erro ao excluir:", error)
+  }
+}
+
+// Limpa tudo ao cancelar
+const cancelForm = () => {
+  newItem.value = { species: '', batch: '', supplier: '', amount: 0 }
+  itemEditingId.value = null
+  showForm.value = false
+}
+
 onMounted(() => {
   searchItem()
 })
@@ -69,13 +109,13 @@ onMounted(() => {
 
     <div class="cabecalho-pagina">
       <h2>Gestão de Viveiro e Estoque</h2>
-      <button class="btn-primario" @click="showForm = !showForm">
-        {{ showForm ? 'Cancelar Cadastro' : '+ Cadastrar Nova Muda' }}
+      <button class="btn-primario" @click="showForm ? cancelForm() : showForm = true">
+        {{ showForm ? 'Cancelar' : '+ Cadastrar Nova Muda' }}
       </button>
     </div>
 
     <div class="card" v-if="showForm">
-      <h3>Cadastrar Nova Muda</h3>
+      <h3>{{ itemEditingId ? 'Editar Muda' : 'Cadastrar Nova Muda' }}</h3>
       <form @submit.prevent="saveItem" class="formulario">
 
         <div class="grupo-input">
@@ -125,8 +165,8 @@ onMounted(() => {
             <td>{{ muda.supplier }}</td>
             <td>{{ muda.amount }} un.</td>
             <td>
-              <button class="btn-acao editar">Editar</button>
-              <button class="btn-acao excluir">Excluir</button>
+              <button class="btn-acao editar" @click="editItem(muda)">Editar</button>
+              <button class="btn-acao excluir" @click="deleteItem(muda.id)">Excluir</button>
             </td>
           </tr>
           <tr v-if="mudas.length === 0">
