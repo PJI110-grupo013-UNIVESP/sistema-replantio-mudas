@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 import jwt
 import os
@@ -24,9 +24,38 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+# --- SEGURAÇA DA APLICAÇÃO ---
+SECRET_KEY_BAK = "2bdc43c9a9538148c668f1b40c5906" \
+    "cd4e13b941485d074745c5a496b1752b95"
+ALGORITHM_BAK = 'HS256'
+
+SECRET_KEY = os.getenv("SECRET_KEY", SECRET_KEY_BAK)
+ALGORITHM = os.getenv("ALGORITHM", ALGORITHM_BAK)
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+
+def get_current_user(token: str = Depends(oauth2_scheme),
+                     db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="We were unable to validate the login credentials.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str | None = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if user is None:
+        raise credentials_exception
+
+    return user
 
 
 def create_access_token(data: dict):
@@ -87,12 +116,15 @@ def read_root():
 
 
 @app.get("/mudas", response_model=list[schemas.MudaResponse])
-def list_items(db: Session = Depends(get_db)):
+def list_items(db: Session = Depends(get_db),
+               current_user: models.User = Depends(get_current_user)):
     return db.query(models.Muda).all()
 
 
 @app.post("/mudas", response_model=schemas.MudaResponse)
-def create_items(muda: schemas.MudaCreate, db: Session = Depends(get_db)):
+def create_items(muda: schemas.MudaCreate,
+                 db: Session = Depends(get_db),
+                 current_user: models.User = Depends(get_current_user)):
     new_item = models.Muda(
         species=muda.species,
         batch=muda.batch,
@@ -107,7 +139,8 @@ def create_items(muda: schemas.MudaCreate, db: Session = Depends(get_db)):
 
 @app.put("/mudas/{muda_id}", response_model=schemas.MudaResponse)
 def update_item(muda_id: int, muda_updated: schemas.MudaCreate,
-                db: Session = Depends(get_db)):
+                db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user)):
     item = db.query(models.Muda).filter(models.Muda.id == muda_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -123,7 +156,8 @@ def update_item(muda_id: int, muda_updated: schemas.MudaCreate,
 
 
 @app.delete("/mudas/{muda_id}")
-def delete_item(muda_id: int, db: Session = Depends(get_db)):
+def delete_item(muda_id: int, db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user)):
     item = db.query(models.Muda).filter(models.Muda.id == muda_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")

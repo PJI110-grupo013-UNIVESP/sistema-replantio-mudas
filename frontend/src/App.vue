@@ -45,8 +45,8 @@ const logout = () => {
 
 <style>
 * {
-  margin: 1px;
-  padding: 1px;
+  margin: 0px;
+  padding: 0px;
   box-sizing: border-box;
   font-family: 'Open Sans', 'roboto', sans-serif;
 }

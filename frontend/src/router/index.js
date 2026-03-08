@@ -25,4 +25,15 @@ const router = createRouter({
   ],
 })
 
+// --- GUARDA DE ROTA ---
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = localStorage.getItem('token')
+
+  if (to.name !== 'login' && !isAuthenticated) {
+    next({ name: 'login' })
+  } else {
+    next()
+  }
+})
+
 export default router

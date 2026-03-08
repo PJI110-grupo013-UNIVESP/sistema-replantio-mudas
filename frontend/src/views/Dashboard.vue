@@ -7,7 +7,11 @@ const erroConexao = ref(false)
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8000/status')
+    const response = await fetch('http://localhost:8000/status', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     const data = await response.json()
 
     statusApi.value = data.status

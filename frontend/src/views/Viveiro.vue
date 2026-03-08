@@ -16,7 +16,11 @@ const mudas = ref([])
 
 const searchItem = async () => {
   try {
-    const response = await fetch("http://localhost:8000/mudas")
+    const response = await fetch("http://localhost:8000/mudas", {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
     if (response.ok) {
       mudas.value = await response.json()
     }
@@ -40,7 +44,8 @@ const saveItem = async () => {
     const response = await fetch(url, {
       method: method,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(newItem.value)
     })
@@ -79,7 +84,12 @@ const deleteItem = async (id) => {
   if (!confirm("Tem certeza que deseja excluir esta muda do estoque?")) return;
 
   try {
-    const response = await fetch(`http://localhost:8000/mudas/${id}`, { method: 'DELETE' })
+    const response = await fetch(`http://localhost:8000/mudas/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      }
+    })
     if (response.ok) {
       mudas.value = mudas.value.filter(m => m.id !== id)
     }
