@@ -1,13 +1,25 @@
 <script setup>
-import { RouterLink, RouterView } from 'vue-router';
+import { RouterLink, RouterView, useRouter } from 'vue-router'
+
+const router = useRouter()
+
+const logout = () => {
+  localStorage.removeItem('token')
+
+  router.push('/')
+}
 </script>
 
 <template>
-  <div class="layout-admin">
+  <div v-if="$route.meta.hideMenu">
+    <RouterView />
+  </div>
+
+  <div class="layout-admin" v-else>
     <aside class="sidebar">
       <div class="logo">🌱 Replantio</div>
       <nav>
-        <RouterLink to="/" active-class="ativo">Dashboard</RouterLink>
+        <RouterLink to="/dashboard" active-class="ativo">Dashboard</RouterLink>
         <RouterLink to="/viveiro" active-class="ativo">Viveiro de Mudas</RouterLink>
         <a href="#">Áreas de Plantio</a>
         <a href="#">Usuários</a>
@@ -16,12 +28,15 @@ import { RouterLink, RouterView } from 'vue-router';
 
     <div class="main-content">
       <header class="topbar">
-        <h2>Visão Geral</h2>
-        <div class="user">Olá, Guest</div>
+        <h2>Painel de Controle</h2>
+
+        <div class="perfil-usuario">
+          <div class="user">Admin</div>
+          <button @click="logout" class="btn-sair">Sair</button>
+        </div>
       </header>
 
       <main class="content">
-
         <RouterView />
       </main>
     </div>
@@ -30,8 +45,8 @@ import { RouterLink, RouterView } from 'vue-router';
 
 <style>
 * {
-  margin: 1;
-  padding: 1;
+  margin: 1px;
+  padding: 1px;
   box-sizing: border-box;
   font-family: 'Open Sans', 'roboto', sans-serif;
 }
@@ -133,6 +148,29 @@ nav a.ativo {
   background-color: #d8f3dc;
   padding: 8px 16px;
   border-radius: 20px;
+}
+
+.perfil-usuario {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.btn-sair {
+  background-color: transparent;
+  color: #e63946;
+  border: 1px solid #e63946;
+  padding: 6px 15px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.85rem;
+  transition: 0.3s;
+}
+
+.btn-sair:hover {
+  background-color: #e63946;
+  color: white;
 }
 
 /* Miolo da Aplicação */

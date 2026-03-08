@@ -12,9 +12,6 @@ const newItem = ref({
   amount: 0
 })
 
-//  Lista simulada de mudas (futuramente virá do banco de dados)
-// { id: 1, especie: 'Eucalipto', lote: 'L-2026A', fornecedor: 'Viveiro Central', quantidade: 500 },
-// { id: 2, especie: 'Ipê Amarelo', lote: 'L-2026B', fornecedor: 'BioMudas', quantidade: 150 }
 const mudas = ref([])
 
 const searchItem = async () => {
