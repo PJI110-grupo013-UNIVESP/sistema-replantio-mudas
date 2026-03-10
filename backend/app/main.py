@@ -246,3 +246,51 @@ def delete_item(muda_id: int, db: Session = Depends(get_db),
 @app.get("/status")
 def status_api():
     return {"status": "Online", "Database": "Conectado"}
+
+
+# --- ROTAS DE REPLANTIO ---
+
+@app.get("/replantios", response_model=list[schemas.ReplantioResponse])
+def list_replantios(db: Session = Depends(get_db),
+                    current_user: models.User = Depends(get_current_user)):
+    return db.query(models.Replantio).all()
+
+
+@app.post("/replantios", response_model=schemas.ReplantioResponse)
+def create_replantio(
+    replantio: schemas.ReplantioCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+
+    item_in_stock = db.query(models.Muda).filter(
+        models.Muda.id == replantio.muda_id).first()
+    if not item_in_stock:
+        raise HTTPException(
+            status_code=404, detail="Muda não encontrada no estoque.")
+
+    if item_in_stock.amount < replantio.amount:
+        raise HTTPException(
+            status_code=400,
+            detail=f"""Estoque insuficiente.
+                    Tentou plantar {replantio.amount}, mas só existem
+                    {item_in_stock.amount} mudas desta espécie.
+                    """
+        )
+
+    item_in_stock.amount -= replantio.amount
+
+    new_replantio = models.Replantio(
+        muda_id=replantio.muda_id,
+        user_id=current_user.id,  # Pega o ID de quem fez o login!
+        area_name=replantio.area_name,
+        amount=replantio.amount,
+        status=replantio.status,
+        planned_date=replantio.planned_date,
+        estimated_cost=replantio.estimated_cost
+    )
+
+    db.add(new_replantio)
+    db.commit()
+    db.refresh(new_replantio)
+    return new_replantio

@@ -1,4 +1,6 @@
 from pydantic import BaseModel
+from datetime import date
+from typing import Optional
 
 
 class MudaBase(BaseModel):
@@ -36,3 +38,25 @@ class UserResponse(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class ReplantioBase(BaseModel):
+    muda_id: int
+    area_name: str
+    amount: int
+    status: str = "Planejado"
+    planned_date: Optional[date] = None
+    actual_date: Optional[date] = None
+    estimated_cost: Optional[float] = None
+    actual_cost: Optional[float] = None
+    surviving_amount: Optional[int] = None
+
+
+class ReplantioCreate(ReplantioBase):
+    pass
+
+
+class ReplantioResponse(ReplantioBase):
+    id: int
+    user_id: int
+    model_config = {"from_attributes": True}

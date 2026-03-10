@@ -29,16 +29,16 @@ const logout = () => {
     <aside class="sidebar">
       <div class="logo">🌱 Replantio</div>
       <nav>
-        <RouterLink to="/dashboard" active-class="ativo">Dashboard</RouterLink>
-        <RouterLink to="/viveiro" active-class="ativo">Viveiro de Mudas</RouterLink>
-        <a href="#">Áreas de Plantio</a>
-        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="ativo">Usuários</RouterLink>
+        <RouterLink to="/dashboard" active-class="active">Dashboard</RouterLink>
+        <RouterLink to="/viveiro" active-class="active">Viveiro de Mudas</RouterLink>
+        <RouterLink to="/replantios" active-class="active">Áreas de Plantio</RouterLink>
+        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active">Usuários</RouterLink>
       </nav>
     </aside>
 
     <div class="main-content">
       <header class="topbar">
-        <h2>Painel de Controle</h2>
+        <h2 class="title">Painel de Controle</h2>
 
         <div class="perfil-usuario">
           <div class="user">{{ userName }}</div>
@@ -78,6 +78,11 @@ const logout = () => {
 .card p {
   color: #4a5568;
   line-height: 1.5;
+}
+
+.title {
+  color: #1b4332;
+  margin-bottom: 10px;
 }
 </style>
 
@@ -123,7 +128,7 @@ nav a {
 }
 
 nav a:hover,
-nav a.ativo {
+nav a.active {
   background-color: #2d6a4f;
   border-left: 4px solid #52b788;
   color: white;

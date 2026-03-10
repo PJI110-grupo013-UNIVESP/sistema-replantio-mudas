@@ -1,5 +1,7 @@
-from sqlalchemy import String, Boolean
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Boolean, ForeignKey, Date, Float
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import date
+from typing import Optional
 from .database import Base
 
 
@@ -22,3 +24,27 @@ class User(Base):
     hashed_password: Mapped[str] = mapped_column(String)
     role: Mapped[str] = mapped_column(String, default="common")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class Replantio(Base):
+    __tablename__ = "replantios"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    muda_id: Mapped[int] = mapped_column(ForeignKey('mudas.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+
+    area_name: Mapped[str] = mapped_column(String, index=True)
+    amount: Mapped[int] = mapped_column()
+    status: Mapped[str] = mapped_column(String, default="Planejado")
+
+    planned_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    actual_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+
+    estimated_cost: Mapped[Optional[float]
+                           ] = mapped_column(Float, nullable=True)
+    actual_cost: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    surviving_amount: Mapped[Optional[int]] = mapped_column(nullable=True)
+
+    muda = relationship("Muda")
+    user = relationship("User")

@@ -3,6 +3,7 @@ import Dashboard from '@/views/Dashboard.vue'
 import Viveiro from '@/views/Viveiro.vue'
 import Login from '@/views/Login.vue'
 import Usuarios from '@/views/Usuarios.vue'
+import Replantios from '@/views/Replantios.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -26,7 +27,12 @@ const router = createRouter({
     { path: '/usuarios', 
       name: 'usuarios', 
       component: Usuarios 
-    }
+    },
+    {
+      path: '/replantios',
+      name: 'replantios',
+      component: Replantios
+    },
   ],
 })
 
