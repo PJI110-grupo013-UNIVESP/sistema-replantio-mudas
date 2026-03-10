@@ -33,6 +33,17 @@ const userlogin = async () => {
 
       localStorage.setItem('token', data.access_token)
 
+      const meResponse = await fetch('http://localhost:8000/users/me', {
+        headers: {
+          'Authorization': `Bearer ${data.access_token}`
+        }
+      })
+      if (meResponse.ok) {
+        const meData = await meResponse.json()
+        localStorage.setItem('userName', meData.name)
+        localStorage.setItem('userRole', meData.role)
+      }
+
       router.push('/dashboard')
     } else {
       errorLogin.value = true
@@ -115,7 +126,7 @@ const userlogin = async () => {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  /* border-radius: 12px; */
+  border-radius: 12px;
 }
 
 .content-presentation {

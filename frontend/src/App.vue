@@ -1,10 +1,20 @@
 <script setup>
+import { ref } from 'vue'
 import { RouterLink, RouterView, useRouter } from 'vue-router'
 
 const router = useRouter()
+const userName = ref('')
+const userRole = ref('')
+
+router.afterEach(() => {
+  userName.value = localStorage.getItem('userName') || ''
+  userRole.value = localStorage.getItem('userRole') || 'common'
+})
 
 const logout = () => {
   localStorage.removeItem('token')
+  localStorage.removeItem('userName')
+  localStorage.removeItem('userRole')
 
   router.push('/')
 }
@@ -22,7 +32,7 @@ const logout = () => {
         <RouterLink to="/dashboard" active-class="ativo">Dashboard</RouterLink>
         <RouterLink to="/viveiro" active-class="ativo">Viveiro de Mudas</RouterLink>
         <a href="#">Áreas de Plantio</a>
-        <a href="#">Usuários</a>
+        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="ativo">Usuários</RouterLink>
       </nav>
     </aside>
 
@@ -31,7 +41,7 @@ const logout = () => {
         <h2>Painel de Controle</h2>
 
         <div class="perfil-usuario">
-          <div class="user">Admin</div>
+          <div class="user">{{ userName }}</div>
           <button @click="logout" class="btn-sair">Sair</button>
         </div>
       </header>

@@ -8,11 +8,37 @@ import os
 from dotenv import load_dotenv
 
 from . import models, schemas, auth
-from .database import engine, get_db
+from .database import engine, get_db, SessionLocal
 
 load_dotenv()
 
 models.Base.metadata.create_all(bind=engine)
+
+
+def admin_default():
+    db = SessionLocal()
+    admin_email = os.getenv("ADMIN_EMAIL")
+    admin_password = os.getenv("ADMIN_PASSWORD")
+
+    user_exists = db.query(models.User).filter(
+        models.User.email == admin_email).first()
+
+    if not user_exists:
+        print(f"Creating a default administrator user: {admin_email}")
+        passwd_encryp = auth.get_password_hash(admin_password)  # type: ignore
+        new_admin = models.User(
+            name='Administrator',
+            email=admin_email,
+            hashed_password=passwd_encryp,
+            role="admin"
+        )
+        db.add(new_admin)
+        db.commit()
+
+    db.close()
+
+
+admin_default()
 
 app = FastAPI(title="API Replantio de Mudas")
 
@@ -25,13 +51,10 @@ app.add_middleware(
 )
 
 # --- SEGURAÇA DA APLICAÇÃO ---
-SECRET_KEY_BAK = "2bdc43c9a9538148c668f1b40c5906" \
-    "cd4e13b941485d074745c5a496b1752b95"
-ALGORITHM_BAK = 'HS256'
-
-SECRET_KEY = os.getenv("SECRET_KEY", SECRET_KEY_BAK)
-ALGORITHM = os.getenv("ALGORITHM", ALGORITHM_BAK)
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(
+    os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))  # type: ignore
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -44,7 +67,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[
+                             ALGORITHM])  # type: ignore
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -69,21 +93,73 @@ def create_access_token(data: dict):
 # --- ROTAS DE UTILIZADORES E AUTENTICAÇÃO ---
 
 
+@app.get("/users", response_model=list[schemas.UserResponse])
+def list_user(db: Session = Depends(get_db),
+              current_user: models.User = Depends(get_current_user)):
+
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied. Only administrators can view users."
+        )
+    return db.query(models.User).all()
+
+
 @app.post("/users", response_model=schemas.UserResponse,
           status_code=status.HTTP_201_CREATED)
-def create_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+def create_user(user: schemas.UserCreate,
+                db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user)):
+
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403, detail="Access denied. Only administrators")
+
     db_user = db.query(models.User).filter(
         models.User.email == user.email).first()
+
     if db_user:
         raise HTTPException(status_code=400, detail="E-mail já registado")
 
     hashed_password = auth.get_password_hash(user.password)
-    new_user = models.User(email=user.email, hashed_password=hashed_password)
+    new_user = models.User(
+        name=user.name,
+        email=user.email,
+        hashed_password=hashed_password,
+        role=user.role
+    )
 
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
     return new_user
+
+
+@app.get("/users/me", response_model=schemas.UserResponse)
+def read_users_me(current_user: models.User = Depends(get_current_user)):
+    return current_user
+
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int,
+                db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Access denied.")
+
+    user_to_delete = db.query(models.User).filter(
+        models.User.id == user_id).first()
+    if not user_to_delete:
+        raise HTTPException(
+            status_code=404, detail="User not found.")
+
+    if user_to_delete.id == current_user.id:
+        raise HTTPException(
+            status_code=400, detail="Você não pode excluir sua própria conta.")
+
+    db.delete(user_to_delete)
+    db.commit()
+    return {"message": "User successfully deleted."}
 
 
 @app.post("/token", response_model=schemas.Token)

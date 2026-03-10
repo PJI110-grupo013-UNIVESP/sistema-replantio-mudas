@@ -6,6 +6,7 @@ const totalMudas = ref(0)
 const erroConexao = ref(false)
 
 onMounted(async () => {
+  const token = localStorage.getItem('token')
   try {
     const response = await fetch('http://localhost:8000/status', {
       headers: {

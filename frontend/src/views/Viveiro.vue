@@ -15,7 +15,10 @@ const newItem = ref({
 const mudas = ref([])
 
 const searchItem = async () => {
+
   try {
+    const token = localStorage.getItem('token')
+
     const response = await fetch("http://localhost:8000/mudas", {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -31,8 +34,10 @@ const searchItem = async () => {
   }
 }
 
-const saveItem = async () => {
+const saveEditItem = async () => {
   try {
+    const token = localStorage.getItem('token')
+
     const url = itemEditingId.value
       ? `http://localhost:8000/mudas/${itemEditingId.value}`
       : "http://localhost:8000/mudas"
@@ -84,6 +89,8 @@ const deleteItem = async (id) => {
   if (!confirm("Tem certeza que deseja excluir esta muda do estoque?")) return;
 
   try {
+    const token = localStorage.getItem('token')
+
     const response = await fetch(`http://localhost:8000/mudas/${id}`, {
       method: 'DELETE',
       headers: {
@@ -123,7 +130,7 @@ onMounted(() => {
 
     <div class="card" v-if="showForm">
       <h3>{{ itemEditingId ? 'Editar Muda' : 'Cadastrar Nova Muda' }}</h3>
-      <form @submit.prevent="saveItem" class="formulario">
+      <form @submit.prevent="saveEditItem" class="formulario">
 
         <div class="grupo-input">
           <label>Espécie da Planta</label>
