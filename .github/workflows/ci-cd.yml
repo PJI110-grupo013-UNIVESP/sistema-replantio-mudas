@@ -29,9 +29,9 @@ jobs:
       - name: Configurar Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       - name: Instalar dependências e Testar
         run: |
           cd frontend
           npm install
-          npm run test:unit
+          npx vitest run
