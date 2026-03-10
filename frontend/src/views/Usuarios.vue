@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { API_URL } from '@/services/api';
 
 const users = ref([])
 const email = ref('')
@@ -12,7 +13,7 @@ const userRoleLoggedin = ref(localStorage.getItem('userRole'))
 const loadUser = async () => {
   const token = localStorage.getItem('token')
   try {
-    const response = await fetch('http://localhost:8000/users', {
+    const response = await fetch(`${API_URL}/users`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (response.ok) {
@@ -30,7 +31,7 @@ const createUser = async () => {
   const token = localStorage.getItem('token')
 
   try {
-    const response = await fetch('http://localhost:8000/users', {
+    const response = await fetch(`${API_URL}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -63,7 +64,7 @@ const deleteUser = async (id) => {
 
   const token = localStorage.getItem('token')
   try {
-    const response = await fetch(`http://localhost:8000/users/${id}`, {
+    const response = await fetch(`${API_URL}/users/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     })

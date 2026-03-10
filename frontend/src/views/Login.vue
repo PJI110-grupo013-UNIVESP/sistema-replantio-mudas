@@ -2,12 +2,14 @@ form-login
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { API_URL } from '@/services/api';
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const errorLogin = ref(false)
 const loading = ref(false)
+
 
 const userlogin = async () => {
 
@@ -20,7 +22,7 @@ const userlogin = async () => {
     formData.append('username', email.value)
     formData.append('password', password.value)
 
-    const response = await fetch("http://localhost:8000/token", {
+    const response = await fetch(`${API_URL}/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
@@ -33,7 +35,7 @@ const userlogin = async () => {
 
       localStorage.setItem('token', data.access_token)
 
-      const meResponse = await fetch('http://localhost:8000/users/me', {
+      const meResponse = await fetch(`${API_URL}/users/me`, {
         headers: {
           'Authorization': `Bearer ${data.access_token}`
         }

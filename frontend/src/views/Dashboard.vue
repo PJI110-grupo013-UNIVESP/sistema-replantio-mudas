@@ -2,6 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { Chart as ChartJS, Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale, ArcElement, LineElement, PointElement, Filler } from 'chart.js'
 import { Bar, Doughnut, Line } from 'vue-chartjs'
+import { API_URL } from '@/services/api';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement, Filler)
 
@@ -16,8 +17,8 @@ const loadData = async () => {
 
   try {
     const [resMudas, resReplantios] = await Promise.all([
-      fetch('http://localhost:8000/mudas', { headers }),
-      fetch('http://localhost:8000/replantios', { headers })
+      fetch(`${API_URL}/mudas`, { headers }),
+      fetch(`${API_URL}/replantios`, { headers })
     ])
 
     if (resMudas.ok) mudas.value = await resMudas.json()

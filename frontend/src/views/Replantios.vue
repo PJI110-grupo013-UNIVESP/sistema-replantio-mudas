@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { API_URL } from '@/services/api';
 
 const replanting = ref([])
 const itemAvaliable = ref([])
@@ -19,7 +20,7 @@ const loading = ref(false)
 const loadMudas = async () => {
   const token = localStorage.getItem('token')
   try {
-    const response = await fetch('http://localhost:8000/mudas', {
+    const response = await fetch(`${API_URL}/mudas`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (response.ok) {
@@ -34,7 +35,7 @@ const loadMudas = async () => {
 const loadReplanting = async () => {
   const token = localStorage.getItem('token')
   try {
-    const response = await fetch('http://localhost:8000/replantios', {
+    const response = await fetch(`${API_URL}/Replantios`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (response.ok) {
@@ -52,7 +53,7 @@ const registerPlanting = async () => {
   const token = localStorage.getItem('token')
 
   try {
-    const response = await fetch('http://localhost:8000/replantios', {
+    const response = await fetch(`${API_URL}/Replantios`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -1,5 +1,6 @@
 <script setup>
 import { onMounted, ref } from 'vue'
+import { API_URL } from '@/services/api';
 
 const showForm = ref(false)
 const loading = ref(true)
@@ -19,7 +20,7 @@ const searchItem = async () => {
   try {
     const token = localStorage.getItem('token')
 
-    const response = await fetch("http://localhost:8000/mudas", {
+    const response = await fetch(`${API_URL}/mudas`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
@@ -39,8 +40,8 @@ const saveEditItem = async () => {
     const token = localStorage.getItem('token')
 
     const url = itemEditingId.value
-      ? `http://localhost:8000/mudas/${itemEditingId.value}`
-      : "http://localhost:8000/mudas"
+      ? `${API_URL}/mudas/${itemEditingId.value}`
+      : `${API_URL}/mudas`
 
     const method = itemEditingId.value
       ? 'PUT'
@@ -91,7 +92,7 @@ const deleteItem = async (id) => {
   try {
     const token = localStorage.getItem('token')
 
-    const response = await fetch(`http://localhost:8000/mudas/${id}`, {
+    const response = await fetch(`${API_URL}/mudas/${id}`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${token}`,
