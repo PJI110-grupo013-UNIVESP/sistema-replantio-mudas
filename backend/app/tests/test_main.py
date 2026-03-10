@@ -1,6 +1,11 @@
 # backend/app/tests/test_main.py
 import os
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["SECRET_KEY"] = "vhsk1PxyfewbT+idVTOxvM6cKEIJDngVP2gVscHpKmY="
+os.environ["ALGORITHM"] = "HS256"
+os.environ["ACCESS_TOKEN_EXPIRE_MINUTES"] = "30"
+os.environ["ADMIN_EMAIL"] = "admin@teste.com"
+os.environ["ADMIN_PASSWORD"] = "123456"
 
 from fastapi.testclient import TestClient   # noqa: E402
 from app.main import app                    # noqa: E402
