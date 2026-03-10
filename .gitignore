@@ -2,6 +2,7 @@
 backend/venv/
 backend/__pycache__/
 *.pyc
+*.db
 
 # Pacotes do Node e Builds (Frontend)
 frontend/node_modules/
@@ -12,3 +13,4 @@ frontend/dist/
 .DS_Store
 .idea/
 .vscode/
+.venv

@@ -92,6 +92,12 @@ const registerPlanting = async () => {
   }
 }
 
+const formatDate = (data) => {
+  if (!data) return '-'
+  const [ano, mes, dia] = data.split('-')
+  return `${dia}/${mes}/${ano}`
+}
+
 
 const getNameSpecie = (id) => {
   const muda = itemAvaliable.value.find(m => m.id === id)
@@ -174,7 +180,7 @@ onMounted(() => {
         </thead>
         <tbody>
           <tr v-for="rep in replanting" :key="rep.id">
-            <td>{{ rep.planned_date || '-' }}</td>
+            <td>{{ formatDate(rep.planned_date) }}</td>
             <td><strong>{{ rep.area_name }}</strong></td>
             <td>{{ getNameSpecie(rep.muda_id) }}</td>
             <td>{{ rep.amount }}</td>
