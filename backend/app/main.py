@@ -17,8 +17,8 @@ models.Base.metadata.create_all(bind=engine)
 
 def admin_default():
     db = SessionLocal()
-    admin_email = os.getenv("ADMIN_EMAIL")
-    admin_password = os.getenv("ADMIN_PASSWORD")
+    admin_email = os.getenv("ADMIN_EMAIL", "admin@replantio.com")
+    admin_password = os.getenv("ADMIN_PASSWORD", "123456")
 
     user_exists = db.query(models.User).filter(
         models.User.email == admin_email).first()
