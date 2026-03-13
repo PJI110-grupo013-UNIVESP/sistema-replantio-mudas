@@ -187,7 +187,6 @@ def read_root():
     return {
         "message":
         "API for the Seedling Replanting System is now operational!"
-
     }
 
 
@@ -282,7 +281,7 @@ def create_replantio(
 
     new_replantio = models.Replantio(
         muda_id=replantio.muda_id,
-        user_id=current_user.id,  # Pega o ID de quem fez o login!
+        user_id=current_user.id,
         area_name=replantio.area_name,
         amount=replantio.amount,
         status=replantio.status,

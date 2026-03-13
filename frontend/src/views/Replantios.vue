@@ -35,7 +35,7 @@ const loadMudas = async () => {
 const loadReplanting = async () => {
   const token = localStorage.getItem('token')
   try {
-    const response = await fetch(`${API_URL}/Replantios`, {
+    const response = await fetch(`${API_URL}/replantios`, {
       headers: { 'Authorization': `Bearer ${token}` }
     })
     if (response.ok) {
@@ -53,7 +53,7 @@ const registerPlanting = async () => {
   const token = localStorage.getItem('token')
 
   try {
-    const response = await fetch(`${API_URL}/Replantios`, {
+    const response = await fetch(`${API_URL}/replantios`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -140,7 +140,7 @@ onMounted(() => {
         </div>
 
         <div class="input-group">
-          <label>Data Planeada</label>
+          <label>Data Planejada</label>
           <input type="date" v-model="planned_date">
         </div>
 
@@ -160,7 +160,7 @@ onMounted(() => {
 
         <div class="form-actions">
           <button type="submit" class="btn-add" :disabled="loading">
-            {{ loading ? 'A Registar...' : 'Registar Plantio' }}
+            {{ loading ? 'Registrando...' : 'Registar Plantio' }}
           </button>
         </div>
       </form>
