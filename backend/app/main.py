@@ -18,14 +18,14 @@ models.Base.metadata.create_all(bind=engine)
 def admin_default():
     db = SessionLocal()
     admin_email = os.getenv("ADMIN_EMAIL")
-    admin_password = os.getenv("ADMIN_PASSWORD")
+    admin_password = os.getenv("ADMIN_PASSWORD", "ADMIN_EMAIL")
 
     user_exists = db.query(models.User).filter(
         models.User.email == admin_email).first()
 
     if not user_exists:
         print(f"Creating a default administrator user: {admin_email}")
-        passwd_encryp = auth.get_password_hash(admin_password)  # type: ignore
+        passwd_encryp = auth.get_password_hash(admin_password)
         new_admin = models.User(
             name='Administrator',
             email=admin_email,
@@ -51,10 +51,9 @@ app.add_middleware(
 )
 
 # --- SEGURAÇA DA APLICAÇÃO ---
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(
-    os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES'))  # type: ignore
+SECRET_KEY = os.getenv('SECRET_KEY', 'ABC')
+ALGORITHM = os.getenv('ALGORITHM')
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -67,8 +66,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[
-                             ALGORITHM])  # type: ignore
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # pyright: ignore
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -84,8 +82,7 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + \
-        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
