@@ -53,7 +53,8 @@ app.add_middleware(
 # --- SEGURAÇA DA APLICAÇÃO ---
 SECRET_KEY = os.getenv('SECRET_KEY', 'ABC')
 ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
+ACCESS_TOKEN_EXPIRE_MINUTES = float(
+    os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -66,7 +67,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM]) # pyright: ignore
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[
+                             ALGORITHM])  # pyright: ignore
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -82,7 +84,8 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + \
+        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -142,13 +145,13 @@ def delete_user(user_id: int,
                 db: Session = Depends(get_db),
                 current_user: models.User = Depends(get_current_user)):
     if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Access denied.")
+        raise HTTPException(status_code=403, detail="Acesso negado.")
 
     user_to_delete = db.query(models.User).filter(
         models.User.id == user_id).first()
     if not user_to_delete:
         raise HTTPException(
-            status_code=404, detail="User not found.")
+            status_code=404, detail="Usuário não encontrado.")
 
     if user_to_delete.id == current_user.id:
         raise HTTPException(

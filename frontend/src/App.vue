@@ -1,23 +1,23 @@
 <script setup>
-import { ref } from 'vue'
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { ref } from "vue";
+import { RouterLink, RouterView, useRouter } from "vue-router";
 
-const router = useRouter()
-const userName = ref('')
-const userRole = ref('')
+const router = useRouter();
+const userName = ref("");
+const userRole = ref("");
 
 router.afterEach(() => {
-  userName.value = localStorage.getItem('userName') || ''
-  userRole.value = localStorage.getItem('userRole') || 'common'
-})
+  userName.value = localStorage.getItem("userName") || "";
+  userRole.value = localStorage.getItem("userRole") || "common";
+});
 
 const logout = () => {
-  localStorage.removeItem('token')
-  localStorage.removeItem('userName')
-  localStorage.removeItem('userRole')
+  localStorage.removeItem("token");
+  localStorage.removeItem("userName");
+  localStorage.removeItem("userRole");
 
-  router.push('/')
-}
+  router.push("/");
+};
 </script>
 
 <template>
@@ -27,12 +27,17 @@ const logout = () => {
 
   <div class="layout-admin" v-else>
     <aside class="sidebar">
-      <div class="logo">🌱 Replantio</div>
+      <div class="logo">
+        <img src="@/assets/logo-icon.png" alt="Company logo" class="img-logo" />
+        <span>Replantio</span>
+      </div>
       <nav>
         <RouterLink to="/dashboard" active-class="active">Dashboard</RouterLink>
         <RouterLink to="/viveiro" active-class="active">Viveiro de Mudas</RouterLink>
         <RouterLink to="/replantios" active-class="active">Áreas de Plantio</RouterLink>
-        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active">Usuários</RouterLink>
+        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active"
+          >Usuários</RouterLink
+        >
       </nav>
     </aside>
 
@@ -58,7 +63,7 @@ const logout = () => {
   margin: 0px;
   padding: 0px;
   box-sizing: border-box;
-  font-family: 'Open Sans', 'roboto', sans-serif;
+  font-family: "Open Sans", "roboto", sans-serif;
 }
 
 .card {
@@ -93,14 +98,13 @@ const logout = () => {
   background-color: #f2f7f4;
 }
 
-
 .sidebar {
   width: 250px;
   background-color: #1b4332;
   color: white;
   display: flex;
   flex-direction: column;
-  border-radius: 16px;
+  /* border-radius: 16px; */
 }
 
 .logo {
@@ -110,7 +114,12 @@ const logout = () => {
   background-color: #081c15;
   text-align: center;
   color: #74c69d;
-  border-radius: 16px;
+  /* border-radius: 16px; */
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
 }
 
 nav {
@@ -193,5 +202,12 @@ nav a.active {
   padding: 20px;
   flex: 1;
   overflow-y: auto;
+}
+
+.img-logo {
+  max-width: 100%;
+  height: 50px;
+  width: auto;
+  display: block;
 }
 </style>

@@ -1,62 +1,60 @@
 form-login
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { API_URL } from '@/services/api';
+import { ref } from "vue";
+import { useRouter } from "vue-router";
+import { API_URL } from "@/services/api";
 
-const router = useRouter()
-const email = ref('')
-const password = ref('')
-const errorLogin = ref(false)
-const loading = ref(false)
-
+const router = useRouter();
+const email = ref("");
+const password = ref("");
+const errorLogin = ref(false);
+const loading = ref(false);
 
 const userlogin = async () => {
-
-  if (!email.value || !password.value) return
-  loading.value = true
-  errorLogin.value = false
+  if (!email.value || !password.value) return;
+  loading.value = true;
+  errorLogin.value = false;
 
   try {
-    const formData = new URLSearchParams()
-    formData.append('username', email.value)
-    formData.append('password', password.value)
+    const formData = new URLSearchParams();
+    formData.append("username", email.value);
+    formData.append("password", password.value);
 
     const response = await fetch(`${API_URL}/token`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: formData
-    })
+      body: formData,
+    });
 
     if (response.ok) {
-      const data = await response.json()
+      const data = await response.json();
 
-      localStorage.setItem('token', data.access_token)
+      localStorage.setItem("token", data.access_token);
 
       const meResponse = await fetch(`${API_URL}/users/me`, {
         headers: {
-          'Authorization': `Bearer ${data.access_token}`
-        }
-      })
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      });
       if (meResponse.ok) {
-        const meData = await meResponse.json()
-        localStorage.setItem('userName', meData.name)
-        localStorage.setItem('userRole', meData.role)
+        const meData = await meResponse.json();
+        localStorage.setItem("userName", meData.name);
+        localStorage.setItem("userRole", meData.role);
       }
 
-      router.push('/dashboard')
+      router.push("/dashboard");
     } else {
-      errorLogin.value = true
+      errorLogin.value = true;
     }
   } catch (error) {
-    console.error("Login communication error:", error)
-    errorLogin.value = true
+    console.error("Login communication error:", error);
+    errorLogin.value = true;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>
 
 <template>
@@ -64,8 +62,10 @@ const userlogin = async () => {
     <div class="presentation">
       <div class="content-presentation">
         <h1>Sistema de Replantio de Mudas</h1>
-        <p>Plataforma inteligente para gestão de viveiros, controle de estoque e monitoramento de áreas de plantio
-          ecológico.</p>
+        <p>
+          Plataforma inteligente para gestão de viveiros, controle de estoque e monitoramento de
+          áreas de plantio ecológico.
+        </p>
       </div>
     </div>
 
@@ -77,33 +77,32 @@ const userlogin = async () => {
         <form @submit.prevent="userlogin" class="form-login">
           <div class="grup-input">
             <label>E-mail</label>
-            <input type="email" v-model="email" placeholder="seu@email.com" required>
+            <input type="email" v-model="email" placeholder="seu@email.com" required />
           </div>
 
           <div class="grup-input">
             <label>Senha</label>
-            <input type="password" v-model="password" placeholder="••••••••" required>
+            <input type="password" v-model="password" placeholder="••••••••" required />
           </div>
 
           <div class="extra-options">
-            <label class="remember-me">
-              <input type="checkbox"> Lembrar de mim
-            </label>
+            <label class="remember-me"> <input type="checkbox" /> Lembrar de mim </label>
             <a href="#" class="forgot-passwd">Esqueceu a senha?</a>
           </div>
 
-          <p v-if="errorLogin" style="color: #e63946; font-size: 0.85rem; text-align: center; font-weight: bold;">
+          <p
+            v-if="errorLogin"
+            style="color: #e63946; font-size: 0.85rem; text-align: center; font-weight: bold"
+          >
             E-mail ou senha incorretos. Tente novamente.
           </p>
 
           <button type="submit" class="enter-btn" :disabled="loading">
-            {{ loading ? 'Entrando ...' : 'Entrar no Sistema' }}
+            {{ loading ? "Entrando ..." : "Entrar no Sistema" }}
           </button>
         </form>
 
-        <p class="footer-text">
-          Não tem uma conta? <a href="#">Solicite acesso</a>
-        </p>
+        <p class="footer-text">Não tem uma conta? <a href="#">Solicite acesso</a></p>
       </div>
     </div>
   </div>
@@ -117,7 +116,7 @@ const userlogin = async () => {
   /* margin: 0;
   padding: 0; */
   overflow-y: auto;
-  border-radius: 12px;
+  /* border-radius: 12px; */
 }
 
 .presentation {
@@ -128,7 +127,7 @@ const userlogin = async () => {
   align-items: center;
   justify-content: center;
   padding: 40px;
-  border-radius: 12px;
+  /* border-radius: 12px; */
 }
 
 .content-presentation {
