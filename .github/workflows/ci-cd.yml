@@ -10,6 +10,20 @@ on:
 jobs:
   testes-backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: replantio_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v3
       - name: Configurar Python
@@ -17,6 +31,8 @@ jobs:
         with:
           python-version: "3.11"
       - name: Instalar dependências e Testar
+        env:
+          DATABASE_URL: postgressql://postgres:postgres@localhost:5432/replantio_db
         run: |
           cd backend
           pip install -r requirements.txt
