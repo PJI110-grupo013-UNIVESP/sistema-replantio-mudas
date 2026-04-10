@@ -34,6 +34,9 @@ jobs:
       - name: Instalar dependências e Testar
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/replantio_db
+          ADMIN_EMAIL: admin@teste.com
+          ADMIN_PASSWORD: senha_super_segura
+          SECRET_KEY: chave_secreta_de_teste_123
         run: |
           cd backend
           pip install -r requirements.txt
