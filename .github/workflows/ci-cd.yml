@@ -33,7 +33,7 @@ jobs:
           python-version: "3.11"
       - name: Instalar dependências e Testar
         env:
-          DATABASE_URL: postgressql://postgres:postgres@localhost:5432/replantio_db
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/replantio_db
         run: |
           cd backend
           pip install -r requirements.txt
