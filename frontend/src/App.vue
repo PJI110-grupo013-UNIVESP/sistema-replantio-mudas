@@ -26,7 +26,7 @@ const logout = () => {
   </div>
 
   <div class="layout-admin" v-else>
-    <aside class="sidebar">
+    <aside class="side-bar">
       <div class="logo">
         <img src="@/assets/logo-icon.png" alt="Company logo" class="img-logo" />
         <span>Replantio</span>
@@ -35,9 +35,7 @@ const logout = () => {
         <RouterLink to="/dashboard" active-class="active">Dashboard</RouterLink>
         <RouterLink to="/viveiro" active-class="active">Viveiro de Mudas</RouterLink>
         <RouterLink to="/replantios" active-class="active">Áreas de Plantio</RouterLink>
-        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active"
-          >Usuários</RouterLink
-        >
+        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active">Usuários</RouterLink>
       </nav>
     </aside>
 
@@ -45,9 +43,9 @@ const logout = () => {
       <header class="topbar">
         <h2 class="title">Painel de Controle</h2>
 
-        <div class="perfil-usuario">
+        <div class="user-profile">
           <div class="user">{{ userName }}</div>
-          <button @click="logout" class="btn-sair">Sair</button>
+          <button @click="logout" class="btn-quit">Sair</button>
         </div>
       </header>
 
@@ -98,13 +96,12 @@ const logout = () => {
   background-color: #f2f7f4;
 }
 
-.sidebar {
+.side-bar {
   width: 250px;
   background-color: #1b4332;
   color: white;
   display: flex;
   flex-direction: column;
-  /* border-radius: 16px; */
 }
 
 .logo {
@@ -114,8 +111,6 @@ const logout = () => {
   background-color: #081c15;
   text-align: center;
   color: #74c69d;
-  /* border-radius: 16px; */
-
   display: flex;
   align-items: center;
   justify-content: center;
@@ -174,13 +169,13 @@ nav a.active {
   border-radius: 20px;
 }
 
-.perfil-usuario {
+.user-profile {
   display: flex;
   align-items: center;
   gap: 15px;
 }
 
-.btn-sair {
+.btn-quit {
   background-color: transparent;
   color: #e63946;
   border: 1px solid #e63946;
@@ -192,7 +187,7 @@ nav a.active {
   transition: 0.3s;
 }
 
-.btn-sair:hover {
+.btn-quit:hover {
   background-color: #e63946;
   color: white;
 }

@@ -32,7 +32,7 @@ describe('App', () => {
       }
     })
     
-    expect(wrapper.text()).toContain('🌱 Replantio')
+    expect(wrapper.text()).toContain('Replantio')
     expect(wrapper.text()).toContain('Painel de Controle')
   })
 })

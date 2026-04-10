@@ -18,7 +18,7 @@ models.Base.metadata.create_all(bind=engine)
 def admin_default():
     db = SessionLocal()
     admin_email = os.getenv("ADMIN_EMAIL")
-    admin_password = os.getenv("ADMIN_PASSWORD", "ADMIN_EMAIL")
+    admin_password = str(os.getenv("ADMIN_PASSWORD"))
 
     user_exists = db.query(models.User).filter(
         models.User.email == admin_email).first()
@@ -44,17 +44,17 @@ app = FastAPI(title="API Replantio de Mudas")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Alterar em produção
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 # --- SEGURAÇA DA APLICAÇÃO ---
-SECRET_KEY = os.getenv('SECRET_KEY', 'ABC')
+SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
-ACCESS_TOKEN_EXPIRE_MINUTES = float(
-    os.getenv('ACCESS_TOKEN_EXPIRE_MINUTES', 60))
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

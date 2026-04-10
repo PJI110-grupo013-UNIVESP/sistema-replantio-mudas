@@ -85,15 +85,12 @@ const userlogin = async () => {
             <input type="password" v-model="password" placeholder="••••••••" required />
           </div>
 
-          <div class="extra-options">
+          <!-- <div class="extra-options">
             <label class="remember-me"> <input type="checkbox" /> Lembrar de mim </label>
             <a href="#" class="forgot-passwd">Esqueceu a senha?</a>
-          </div>
+          </div> -->
 
-          <p
-            v-if="errorLogin"
-            style="color: #e63946; font-size: 0.85rem; text-align: center; font-weight: bold"
-          >
+          <p v-if="errorLogin" style="color: #e63946; font-size: 0.85rem; text-align: center; font-weight: bold">
             E-mail ou senha incorretos. Tente novamente.
           </p>
 
@@ -102,7 +99,7 @@ const userlogin = async () => {
           </button>
         </form>
 
-        <p class="footer-text">Não tem uma conta? <a href="#">Solicite acesso</a></p>
+        <!-- <p class="footer-text">Não tem uma conta? <a href="#">Solicite acesso</a></p> -->
       </div>
     </div>
   </div>
