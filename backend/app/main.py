@@ -42,9 +42,17 @@ admin_default()
 
 app = FastAPI(title="API Replantio de Mudas")
 
+origins = [
+    "http://localhost:5173",
+    "http://localhost:80",
+    "http://localhost",
+    "https://gaiaconsciencia.com.br",
+    "https://www.gaiaconsciencia.com.br"
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
