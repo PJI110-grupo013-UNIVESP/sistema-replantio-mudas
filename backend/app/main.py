@@ -1,14 +1,15 @@
-from datetime import datetime, timedelta, timezone
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from sqlalchemy.orm import Session
-import jwt
 import os
-from dotenv import load_dotenv
+from datetime import datetime, timedelta, timezone
 
-from . import models, schemas, auth
-from .database import engine, get_db, SessionLocal
+import jwt
+from dotenv import load_dotenv
+from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
+from . import auth, models, schemas
+from .database import SessionLocal, engine, get_db
 
 load_dotenv()
 
@@ -20,17 +21,16 @@ def admin_default():
     admin_email = os.getenv("ADMIN_EMAIL")
     admin_password = str(os.getenv("ADMIN_PASSWORD"))
 
-    user_exists = db.query(models.User).filter(
-        models.User.email == admin_email).first()
+    user_exists = db.query(models.User).filter(models.User.email == admin_email).first()
 
     if not user_exists:
         print(f"Creating a default administrator user: {admin_email}")
         passwd_encryp = auth.get_password_hash(admin_password)
         new_admin = models.User(
-            name='Administrator',
+            name="Administrator",
             email=admin_email,
             hashed_password=passwd_encryp,
-            role="admin"
+            role="admin",
         )
         db.add(new_admin)
         db.commit()
@@ -51,24 +51,24 @@ app.add_middleware(
 )
 
 # --- SEGURAÇA DA APLICAÇÃO ---
-SECRET_KEY = os.getenv('SECRET_KEY')
-ALGORITHM = os.getenv('ALGORITHM')
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = str(os.getenv("ALGORITHM"))
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def get_current_user(token: str = Depends(oauth2_scheme),
-                     db: Session = Depends(get_db)):
+def get_current_user(
+    token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="We were unable to validate the login credentials.",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[
-                             ALGORITHM])  # pyright: ignore
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str | None = payload.get("sub")
         if email is None:
             raise credentials_exception
@@ -84,39 +84,42 @@ def get_current_user(token: str = Depends(oauth2_scheme),
 
 def create_access_token(data: dict):
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + \
-        timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
 
 # --- ROTAS DE UTILIZADORES E AUTENTICAÇÃO ---
 
 
 @app.get("/users", response_model=list[schemas.UserResponse])
-def list_user(db: Session = Depends(get_db),
-              current_user: models.User = Depends(get_current_user)):
+def list_user(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
 
     if current_user.role != "admin":
         raise HTTPException(
-            status_code=403,
-            detail="Access denied. Only administrators can view users."
+            status_code=403, detail="Access denied. Only administrators can view users."
         )
     return db.query(models.User).all()
 
 
-@app.post("/users", response_model=schemas.UserResponse,
-          status_code=status.HTTP_201_CREATED)
-def create_user(user: schemas.UserCreate,
-                db: Session = Depends(get_db),
-                current_user: models.User = Depends(get_current_user)):
+@app.post(
+    "/users", response_model=schemas.UserResponse, status_code=status.HTTP_201_CREATED
+)
+def create_user(
+    user: schemas.UserCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
 
     if current_user.role != "admin":
         raise HTTPException(
-            status_code=403, detail="Access denied. Only administrators")
+            status_code=403, detail="Access denied. Only administrators"
+        )
 
-    db_user = db.query(models.User).filter(
-        models.User.email == user.email).first()
+    db_user = db.query(models.User).filter(models.User.email == user.email).first()
 
     if db_user:
         raise HTTPException(status_code=400, detail="E-mail já registado")
@@ -126,7 +129,7 @@ def create_user(user: schemas.UserCreate,
         name=user.name,
         email=user.email,
         hashed_password=hashed_password,
-        role=user.role
+        role=user.role,
     )
 
     db.add(new_user)
@@ -141,21 +144,22 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
 
 
 @app.delete("/users/{user_id}")
-def delete_user(user_id: int,
-                db: Session = Depends(get_db),
-                current_user: models.User = Depends(get_current_user)):
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Acesso negado.")
 
-    user_to_delete = db.query(models.User).filter(
-        models.User.id == user_id).first()
+    user_to_delete = db.query(models.User).filter(models.User.id == user_id).first()
     if not user_to_delete:
-        raise HTTPException(
-            status_code=404, detail="Usuário não encontrado.")
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
     if user_to_delete.id == current_user.id:
         raise HTTPException(
-            status_code=400, detail="Você não pode excluir sua própria conta.")
+            status_code=400, detail="Você não pode excluir sua própria conta."
+        )
 
     db.delete(user_to_delete)
     db.commit()
@@ -163,13 +167,12 @@ def delete_user(user_id: int,
 
 
 @app.post("/token", response_model=schemas.Token)
-def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
-                           db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(
-        models.User.email == form_data.username).first()
+def login_for_access_token(
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
+):
+    user = db.query(models.User).filter(models.User.email == form_data.username).first()
 
-    if not user or not auth.verify_password(form_data.password,
-                                            user.hashed_password):
+    if not user or not auth.verify_password(form_data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="E-mail ou palavra-passe incorretos",
@@ -179,32 +182,33 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(),
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
+
 # --- ROTAS DE MUDAS ---
 
 
 @app.get("/")
 def read_root():
-    return {
-        "message":
-        "API for the Seedling Replanting System is now operational!"
-    }
+    return {"message": "API for the Seedling Replanting System is now operational!"}
 
 
 @app.get("/mudas", response_model=list[schemas.MudaResponse])
-def list_items(db: Session = Depends(get_db),
-               current_user: models.User = Depends(get_current_user)):
+def list_items(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
     return db.query(models.Muda).all()
 
 
 @app.post("/mudas", response_model=schemas.MudaResponse)
-def create_items(muda: schemas.MudaCreate,
-                 db: Session = Depends(get_db),
-                 current_user: models.User = Depends(get_current_user)):
+def create_items(
+    muda: schemas.MudaCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     new_item = models.Muda(
         species=muda.species,
         batch=muda.batch,
         supplier=muda.supplier,
-        amount=muda.amount
+        amount=muda.amount,
     )
     db.add(new_item)
     db.commit()
@@ -213,9 +217,12 @@ def create_items(muda: schemas.MudaCreate,
 
 
 @app.put("/mudas/{muda_id}", response_model=schemas.MudaResponse)
-def update_item(muda_id: int, muda_updated: schemas.MudaCreate,
-                db: Session = Depends(get_db),
-                current_user: models.User = Depends(get_current_user)):
+def update_item(
+    muda_id: int,
+    muda_updated: schemas.MudaCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     item = db.query(models.Muda).filter(models.Muda.id == muda_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -231,8 +238,11 @@ def update_item(muda_id: int, muda_updated: schemas.MudaCreate,
 
 
 @app.delete("/mudas/{muda_id}")
-def delete_item(muda_id: int, db: Session = Depends(get_db),
-                current_user: models.User = Depends(get_current_user)):
+def delete_item(
+    muda_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
     item = db.query(models.Muda).filter(models.Muda.id == muda_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Item not found")
@@ -249,9 +259,11 @@ def status_api():
 
 # --- ROTAS DE REPLANTIO ---
 
+
 @app.get("/replantios", response_model=list[schemas.ReplantioResponse])
-def list_replantios(db: Session = Depends(get_db),
-                    current_user: models.User = Depends(get_current_user)):
+def list_replantios(
+    db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)
+):
     return db.query(models.Replantio).all()
 
 
@@ -259,14 +271,14 @@ def list_replantios(db: Session = Depends(get_db),
 def create_replantio(
     replantio: schemas.ReplantioCreate,
     db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user)
+    current_user: models.User = Depends(get_current_user),
 ):
 
-    item_in_stock = db.query(models.Muda).filter(
-        models.Muda.id == replantio.muda_id).first()
+    item_in_stock = (
+        db.query(models.Muda).filter(models.Muda.id == replantio.muda_id).first()
+    )
     if not item_in_stock:
-        raise HTTPException(
-            status_code=404, detail="Muda não encontrada no estoque.")
+        raise HTTPException(status_code=404, detail="Muda não encontrada no estoque.")
 
     if item_in_stock.amount < replantio.amount:
         raise HTTPException(
@@ -274,7 +286,7 @@ def create_replantio(
             detail=f"""Estoque insuficiente.
                     Tentou plantar {replantio.amount}, mas só existem
                     {item_in_stock.amount} mudas desta espécie.
-                    """
+                    """,
         )
 
     item_in_stock.amount -= replantio.amount
@@ -286,7 +298,7 @@ def create_replantio(
         amount=replantio.amount,
         status=replantio.status,
         planned_date=replantio.planned_date,
-        estimated_cost=replantio.estimated_cost
+        estimated_cost=replantio.estimated_cost,
     )
 
     db.add(new_replantio)

@@ -56,31 +56,36 @@ jobs:
           npm install
           npx vitest run
 
-  # deploy-backend:
-  #     needs: testes-backend
-  #     runs-on: ubuntu-latest
-  #     steps:
-  #       - uses: actions/checkout@v3
-  #
-  #       - name: Instalar o Fly.io
-  #         uses: superfly/flyctl-actions/setup-flyctl@master
-  #
-  #       - name: Deploy da API
-  #         run: |
-  #           cd backend
-  #           flyctl deploy --remote-only
-  #         env:
-  #           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-  #
-  # deploy-frontend:
-  #     needs: testes-frontend
-  #     runs-on: ubuntu-latest
-  #     steps:
-  #       - uses: actions/checkout@v3
-  #       - uses: superfly/flyctl-actions/setup-flyctl@master
-  #       - name: Deploy Web
-  #         run: |
-  #           cd frontend
-  #           flyctl deploy --remote-only --build-arg VITE_API_URL=https://replantio-api-univesp.fly.dev
-  #         env:
-  #           FLY_API_TOKEN: ${{ secrets.FLY_WEB_TOKEN }}
+  deploy-gcp:
+    needs: [testes-backend, testes-frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name = 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v3
+
+      - name: Enviar arquivos para o Google Cloud (SCP)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          source: "."
+          target: "~/sistema-replantio"
+
+      - name: Iniciar Contêineres no Servidor (SSH)
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.GCP_HOST }}
+          username: ${{ secrets.GCP_USERNAME }}
+          key: ${{ secrets.GCP_SSH_KEY }}
+          script: |
+            cd ~/sistema-replantio
+
+            echo "DATABASE_URL=postgresql://postgres:postgres@replantio_db:5432/replantio_db" > backend/.env
+            echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> backend/.env
+            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> backend/.env
+            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> backend/.env
+
+            sudo docker compose down
+            sudo docker compose up -d --build

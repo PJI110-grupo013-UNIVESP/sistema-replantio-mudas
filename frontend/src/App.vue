@@ -35,7 +35,9 @@ const logout = () => {
         <RouterLink to="/dashboard" active-class="active">Dashboard</RouterLink>
         <RouterLink to="/viveiro" active-class="active">Viveiro de Mudas</RouterLink>
         <RouterLink to="/replantios" active-class="active">Áreas de Plantio</RouterLink>
-        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active">Usuários</RouterLink>
+        <RouterLink v-if="userRole === 'admin'" to="/usuarios" active-class="active">
+          Usuários
+        </RouterLink>
       </nav>
     </aside>
 
@@ -90,6 +92,20 @@ const logout = () => {
 </style>
 
 <style scoped>
+.menu {
+  cursor: pointer;
+  display: none;
+}
+
+.menu .bar {
+  display: block;
+  width: 28px;
+  height: 3px;
+  border-radius: 3px;
+  background: #000000;
+  margin: 5px auto;
+}
+
 .layout-admin {
   display: flex;
   height: 100vh;
@@ -102,10 +118,11 @@ const logout = () => {
   color: white;
   display: flex;
   flex-direction: column;
+  transition: all 0.5s;
 }
 
 .logo {
-  padding: 20px;
+  padding: 15px;
   font-size: 1.5rem;
   font-weight: bold;
   background-color: #081c15;
@@ -139,7 +156,6 @@ nav a.active {
   border-radius: 16px;
 }
 
-/* Estilos da Parte Direita */
 .main-content {
   flex: 1;
   display: flex;
@@ -149,12 +165,14 @@ nav a.active {
 /* Barra Superior */
 .topbar {
   background-color: white;
-  padding: 10px;
+  padding: 18px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   color: #1b4332;
+  width: 100%;
+  transition: all 0.5s;
 }
 
 .topbar h2 {
