@@ -90,10 +90,7 @@ const userlogin = async () => {
             <a href="#" class="forgot-passwd">Esqueceu a senha?</a>
           </div> -->
 
-          <p
-            v-if="errorLogin"
-            style="color: #e63946; font-size: 0.85rem; text-align: center; font-weight: bold"
-          >
+          <p v-if="errorLogin" style="color: #e63946; font-size: 0.85rem; text-align: center; font-weight: bold">
             E-mail ou senha incorretos. Tente novamente.
           </p>
 
@@ -127,7 +124,7 @@ const userlogin = async () => {
 }
 
 .content-presentation {
-  max-width: 500px;
+  max-width: 100vh;
 }
 
 .content-presentation h1 {
@@ -143,7 +140,7 @@ const userlogin = async () => {
 }
 
 .area-login {
-  flex: 2;
+  flex: 1;
   background-color: #f8fafc;
   display: flex;
   align-items: center;
@@ -241,7 +238,7 @@ const userlogin = async () => {
   text-decoration: none;
 }
 
-@media (max-width: 785px) {
+/* @media (max-width: 785px) {
   .login-container {
     flex-direction: column;
   }
@@ -253,5 +250,5 @@ const userlogin = async () => {
   .card-login {
     padding: 20px;
   }
-}
+} */
 </style>

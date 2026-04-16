@@ -87,6 +87,7 @@ jobs:
             ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
             ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
+            VITE_API_URL=${{ secrets.VITE_API_URL}}
             EOF
 
             cp .env backend/.env
