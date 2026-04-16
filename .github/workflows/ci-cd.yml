@@ -88,6 +88,8 @@ jobs:
             ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             VITE_API_URL=${{ secrets.VITE_API_URL}}
+            ALGORITHM=${{ secrets.ALGORITHM }}
+            ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES}}
             EOF
 
             cp .env backend/.env
