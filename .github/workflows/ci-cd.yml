@@ -82,10 +82,12 @@ jobs:
           script: |
             cd ~/sistema-replantio
 
-            echo "DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}" >> .env
-            echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> .env
-            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> .env
-            echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+            cat <<EOF > .env
+            DATABASE_URL=postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@db:5432/${{ secrets.POSTGRES_DB }}
+            ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}
+            ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            EOF
 
             cp .env backend/.env
 
