@@ -1,8 +1,9 @@
 <script setup>
 import { ref } from "vue";
 import { RouterLink, RouterView, useRouter } from "vue-router";
+import router from "@/router";
 
-const router = useRouter();
+// const router = useRouter();
 const userName = ref("");
 const userRole = ref("");
 

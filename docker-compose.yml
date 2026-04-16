@@ -35,12 +35,12 @@ services:
   frontend:
     build: ./frontend
     container_name: replantio_frontend
-    command: npm run dev
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+    # command: npm run dev
+    # volumes:
+    #   - ./frontend:/app
+    #   - /app/node_modules
     ports:
-      - "5173:5173"
+      - "80:80"
     depends_on:
       - backend
 
