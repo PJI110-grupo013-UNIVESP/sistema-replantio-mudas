@@ -58,7 +58,7 @@ jobs:
 
   deploy-gcp:
     needs: [testes-backend, testes-frontend]
-    if: github.ref == 'refs/heads/main' && github.event_name = 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout do código
