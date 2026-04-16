@@ -82,10 +82,12 @@ jobs:
           script: |
             cd ~/sistema-replantio
 
-            echo "DATABASE_URL=postgresql://postgres:postgres@replantio_db:5432/replantio_db" > backend/.env
+            echo "DATABASE_URL=postgresql://${{secrets.POSTGRES_USER}}:${{secrets.POSTGRES_PASSWORD}}@db:5432/${{secrets.POSTGRES_DB}}" > backend/.env
             echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> backend/.env
             echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> backend/.env
             echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> backend/.env
+
+            cp .env backend/.env
 
             sudo docker compose down
             sudo docker compose up -d --build
