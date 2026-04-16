@@ -94,7 +94,6 @@ const logout = () => {
 <style scoped>
 .menu {
   cursor: pointer;
-  display: none;
 }
 
 .menu .bar {
