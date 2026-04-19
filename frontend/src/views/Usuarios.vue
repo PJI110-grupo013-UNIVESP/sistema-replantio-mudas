@@ -140,7 +140,7 @@ onMounted(() => {
 
 <style scoped>
 .container-users {
-  max-width: 1000px;
+  max-width: auto;
   margin: 0 auto;
 }
 

@@ -78,7 +78,7 @@ const chartDataAreas = computed(() => {
   }
 })
 
-// --- DADOS PARA O GRÁFICO DE STATUS (PIZZA) ---
+// --- DADOS PARA O GRÁFICO DE PIZZA (STATUS) ---
 const chartDataStatus = computed(() => {
   const grouped = {}
   replantios.value.forEach(r => {
@@ -249,7 +249,7 @@ onMounted(() => {
 
 <style scoped>
 .dashboard-container {
-  max-width: 1200px;
+  max-width: auto;
   margin: 0 auto;
   padding-bottom: 40px;
 }
@@ -307,7 +307,7 @@ onMounted(() => {
 
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
 }

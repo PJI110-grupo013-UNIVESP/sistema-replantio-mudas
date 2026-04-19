@@ -199,7 +199,7 @@ onMounted(() => {
 
 <style scoped>
 .replantio-container {
-  max-width: 1000px;
+  max-width: auto;
   margin: 0 auto;
 }
 

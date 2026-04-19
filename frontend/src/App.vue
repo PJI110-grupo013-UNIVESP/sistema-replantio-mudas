@@ -210,9 +210,8 @@ nav a.active {
   color: white;
 }
 
-/* Miolo da Aplicação */
 .content {
-  padding: 20px;
+  padding: 40px;
   flex: 1;
   overflow-y: auto;
 }
