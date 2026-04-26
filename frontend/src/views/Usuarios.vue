@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { API_URL } from '@/services/api';
+import ModalAviso from '@/components/ModalAviso.vue';
 
 const users = ref([])
 const email = ref('')
@@ -9,6 +10,29 @@ const password = ref('')
 const role = ref('common')
 const message = ref('')
 const userRoleLoggedin = ref(localStorage.getItem('userRole'))
+
+const itemToDeleteId = ref(null)
+const modalConfig = ref({
+  show: false,
+  title: '',
+  message: '',
+  type: 'info',
+  isConfirm: false
+})
+
+const showWarning = (title, message, type = 'info', isConfirm = false) => {
+  modalConfig.value = { show: true, title, message, type, isConfirm }
+}
+
+const forDelete = (id, user) => {
+  itemToDeleteId.value = id
+  showWarning(
+    'Cuidado!',
+    `Tem certeza que deseja excluir esse Usuário (${user}) do sistema?`,
+    'warning',
+    true
+  )
+}
 
 const loadUser = async () => {
   const token = localStorage.getItem('token')
@@ -19,7 +43,7 @@ const loadUser = async () => {
     if (response.ok) {
       users.value = await response.json()
     } else {
-      message.value = "Sem permissão para ver utilizadores."
+      message.value = showWarning('Acesso Negado', 'Sem permissão para ver usuários', 'warning')
     }
   } catch (error) {
     console.error(error)
@@ -46,21 +70,24 @@ const createUser = async () => {
     })
 
     if (response.ok) {
-      message.value = "Utilizador criado com sucesso!"
+      message.value = showWarning('Sucesso', 'Usuário criado com sucesso!', 'success')
       name.value = ''
       email.value = ''
       password.value = ''
       loadUser()
     } else {
-      message.value = "Erro ao criar utilizador."
+      message.value = showWarning('Erro', 'Erro ao criar usuário.', 'error')
     }
   } catch (error) {
     console.error(error)
   }
 }
 
-const deleteUser = async (id) => {
-  if (!confirm("Tem certeza que deseja apagar este utilizador do sistema?")) return;
+const deleteUser = async () => {
+  const id = itemToDeleteId.value
+  if (!id) return;
+
+  modalConfig.value.show = false
 
   const token = localStorage.getItem('token')
   try {
@@ -70,11 +97,16 @@ const deleteUser = async (id) => {
     })
 
     if (response.ok) {
-      message.value = "Utilizador apagado!"
+
+      message.value = showWarning('Sucesso', 'Usuário apagado!', 'success')
       users.value = users.value.filter(u => u.id !== id)
     } else {
       const err = await response.json()
-      message.value = err.detail || "Erro ao apagar."
+      if (err.detail == '') {
+        showWarning('Erro', 'Erro ao apagar usuário', 'error')
+      } else {
+        message.value = showWarning('Erro', err.detail, 'error')
+      }
     }
   } catch (error) {
     console.error(error)
@@ -129,13 +161,16 @@ onMounted(() => {
             <td>{{ user.email }}</td>
             <td><span :class="'badge ' + user.role">{{ user.role === 'admin' ? 'Administrador' : 'Comum' }}</span></td>
             <td>
-              <button class="btn-delete" @click="deleteUser(user.id)">Excluir</button>
+              <button class="btn-delete" @click="forDelete(user.id, user.name)">Excluir</button>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+  <ModalAviso :show="modalConfig.show" :title="modalConfig.title" :message="modalConfig.message"
+    :type="modalConfig.type" :isConfirm="modalConfig.isConfirm" @close="modalConfig.show = false"
+    @confirm="deleteUser" />
 </template>
 
 <style scoped>

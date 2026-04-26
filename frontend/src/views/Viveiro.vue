@@ -1,10 +1,37 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { API_URL } from '@/services/api';
+import ModalAviso from '@/components/ModalAviso.vue';
+
 
 const showForm = ref(false)
 const loading = ref(true)
 const itemEditingId = ref(null)
+
+const isAdmin = ref(localStorage.getItem('userRole') === 'admin')
+
+const itemToDeleteId = ref(null)
+const modalConfig = ref({
+  show: false,
+  title: '',
+  message: '',
+  type: 'info',
+  isConfirm: false
+})
+
+const showWarning = (title, message, type = 'info', isConfirm = false) => {
+  modalConfig.value = { show: true, title, message, type, isConfirm }
+}
+
+const forDelete = (id) => {
+  itemToDeleteId.value = id
+  showWarning(
+    'Cuidado!',
+    'Tem certeza que deseja excluir esta muda do estoque?',
+    'warning',
+    true
+  )
+}
 
 const newItem = ref({
   species: '',
@@ -73,6 +100,7 @@ const saveEditItem = async () => {
         amount: 0
       }
       showForm.value = false
+      showWarning('Excelente!', 'Muda salva no estoque com sucesso.', 'success')
     }
   } catch (error) {
     console.error("Error to save an Item:", error)
@@ -86,8 +114,11 @@ const editItem = (muda) => {
   showForm.value = true
 }
 
-const deleteItem = async (id) => {
-  if (!confirm("Tem certeza que deseja excluir esta muda do estoque?")) return;
+const deleteItem = async () => {
+  const id = itemToDeleteId.value
+  if (!id) return;
+
+  modalConfig.value.show = false
 
   try {
     const token = localStorage.getItem('token')
@@ -100,6 +131,7 @@ const deleteItem = async (id) => {
     })
     if (response.ok) {
       mudas.value = mudas.value.filter(m => m.id !== id)
+      showWarning('Feito!', 'Muda removida do estoque.', 'success')
     }
   } catch (error) {
     console.error("Erro ao excluir:", error)
@@ -122,46 +154,46 @@ onMounted(() => {
 <template>
   <div class="viveiro-container">
 
-    <div class="cabecalho-pagina">
+    <div class="page-header">
       <h2>Gestão de Viveiro e Estoque</h2>
-      <button class="btn-primario" @click="showForm ? cancelForm() : showForm = true">
+      <button v-if="isAdmin" class="btn-primario" @click="showForm ? cancelForm() : showForm = true">
         {{ showForm ? 'Cancelar' : '+ Cadastrar Nova Muda' }}
       </button>
     </div>
 
     <div class="card" v-if="showForm">
       <h3>{{ itemEditingId ? 'Editar Muda' : 'Cadastrar Nova Muda' }}</h3>
-      <form @submit.prevent="saveEditItem" class="formulario">
+      <form @submit.prevent="saveEditItem" class="form">
 
-        <div class="grupo-input">
+        <div class="input-group">
           <label>Espécie da Planta</label>
           <input type="text" v-model="newItem.species" required placeholder="Ex: Ipê Roxo">
         </div>
 
-        <div class="grupo-input">
+        <div class="input-group">
           <label>Código do Lote</label>
           <input type="text" v-model="newItem.batch" required placeholder="Ex: Lote-001">
         </div>
 
-        <div class="grupo-input">
+        <div class="input-group">
           <label>Fornecedor</label>
           <input type="text" v-model="newItem.supplier" required placeholder="Nome do Fornecedor">
         </div>
 
-        <div class="grupo-input">
+        <div class="input-group">
           <label>Quantidade Recebida</label>
           <input type="number" v-model="newItem.amount" required min="1">
         </div>
 
-        <div class="acoes-form">
-          <button type="submit" class="btn-sucesso">Salvar no Estoque</button>
+        <div class="act-form">
+          <button type="submit" class="btn-success">Salvar no Estoque</button>
         </div>
       </form>
     </div>
 
     <div class="card">
       <h3>Estoque Atual</h3>
-      <table class="tabela-mudas">
+      <table class="mudas-table">
         <thead>
           <tr>
             <th>ID</th>
@@ -169,7 +201,7 @@ onMounted(() => {
             <th>Espécie</th>
             <th>Fornecedor</th>
             <th>Quantidade</th>
-            <th>Ações</th>
+            <th v-if="isAdmin">Ações</th>
           </tr>
         </thead>
         <tbody>
@@ -179,19 +211,24 @@ onMounted(() => {
             <td>{{ muda.species }}</td>
             <td>{{ muda.supplier }}</td>
             <td>{{ muda.amount }} un.</td>
-            <td>
-              <button class="btn-acao editar" @click="editItem(muda)">Editar</button>
-              <button class="btn-acao excluir" @click="deleteItem(muda.id)">Excluir</button>
+            <td v-if="isAdmin">
+              <button class="btn-act edit" @click="editItem(muda)">Editar</button>
+              <button class="btn-act delete" @click="forDelete(muda.id)">Excluir</button>
             </td>
           </tr>
+          <tr v-if="loading">
+            <td colspan="6" class="blank-text">Carregando estoque... ⏳</td>
+          </tr>
           <tr v-if="mudas.length === 0">
-            <td colspan="6" class="texto-vazio">Nenhuma muda cadastrada no estoque.</td>
+            <td colspan="6" class="blank-text">Nenhuma muda cadastrada no estoque.</td>
           </tr>
         </tbody>
       </table>
     </div>
-
   </div>
+  <ModalAviso :show="modalConfig.show" :title="modalConfig.title" :message="modalConfig.message"
+    :type="modalConfig.type" :isConfirm="modalConfig.isConfirm" @close="modalConfig.show = false"
+    @confirm="deleteItem" />
 </template>
 
 <style scoped>
@@ -202,14 +239,14 @@ onMounted(() => {
 }
 
 /* Cabeçalho */
-.cabecalho-pagina {
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 10px;
 }
 
-.cabecalho-pagina h2 {
+.page-header h2 {
   color: #1b4332;
 }
 
@@ -232,66 +269,66 @@ button {
   background-color: #1b4332;
 }
 
-.btn-sucesso {
+.btn-success {
   background-color: #52b788;
   color: white;
   padding: 10px 20px;
   font-size: 1rem;
 }
 
-.btn-sucesso:hover {
+.btn-success:hover {
   background-color: #40916c;
 }
 
-.btn-acao {
+.btn-act {
   padding: 6px 12px;
   margin-right: 5px;
   border-radius: 4px;
   font-size: 0.85rem;
 }
 
-.btn-acao.editar {
+.btn-act.edit {
   background-color: #fca311;
   color: white;
 }
 
-.btn-acao.excluir {
+.btn-act.delete {
   background-color: #e63946;
   color: white;
 }
 
 /* Formulário */
-.formulario {
+.form {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
   margin-top: 15px;
 }
 
-.grupo-input {
+.input-group {
   display: flex;
   flex-direction: column;
 }
 
-.grupo-input label {
+.input-group label {
   margin-bottom: 5px;
   color: #4a5568;
   font-weight: 500;
   font-size: 0.9rem;
 }
 
-.grupo-input input {
+.input-group input {
   padding: 10px;
   border: 1px solid #cbd5e1;
   border-radius: 6px;
   outline: none;
 }
 
-.grupo-input input:focus {
+.input-group input:focus {
   border-color: #52b788;
 }
 
-.acoes-form {
+.act-form {
   grid-column: span 2;
   display: flex;
   justify-content: flex-end;
@@ -299,26 +336,26 @@ button {
 }
 
 /* Tabela */
-.tabela-mudas {
+.mudas-table {
   width: 100%;
   border-collapse: collapse;
   margin-top: 10px;
 }
 
-.tabela-mudas th,
-.tabela-mudas td {
+.mudas-table th,
+.mudas-table td {
   padding: 12px 15px;
   text-align: left;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.tabela-mudas th {
+.mudas-table th {
   background-color: #f8fafc;
   color: #475569;
   font-weight: 600;
 }
 
-.texto-vazio {
+.blank-text {
   text-align: center;
   color: #94a3b8;
   font-style: italic;

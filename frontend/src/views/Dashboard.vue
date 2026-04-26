@@ -7,8 +7,9 @@ import { API_URL } from '@/services/api';
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement, LineElement, PointElement, Filler)
 
 const mudas = ref([])
-const replantios = ref([])
+const replanting = ref([])
 const loading = ref(true)
+const filterYear = ref('Todos')
 
 // --- BUSCAR DADOS NA API ---
 const loadData = async () => {
@@ -22,7 +23,12 @@ const loadData = async () => {
     ])
 
     if (resMudas.ok) mudas.value = await resMudas.json()
-    if (resReplantios.ok) replantios.value = await resReplantios.json()
+    if (resReplantios.ok) {
+      replanting.value = await resReplantios.json()
+      if (availableYears.value.length > 0) {
+        filterYear.value = availableYears.value[0]
+      }
+    }
   } catch (error) {
     console.error("Erro ao carregar dados do Dashboard:", error)
   } finally {
@@ -30,17 +36,45 @@ const loadData = async () => {
   }
 }
 
+const sortedReplanting = computed(() => {
+  return [...filteredReplanting.value].sort((a, b) => {
+    if (!a.planned_date) return 1;
+    if (!b.planned_date) return -1;
+
+    return b.planned_date.localeCompare(a.planned_date);
+  })
+})
+
+const availableYears = computed(() => {
+  const years = new Set()
+  replanting.value.forEach(rep => {
+    if (rep.planned_date) {
+      years.add(rep.planned_date.split('-')[0])
+    }
+  })
+  return Array.from(years).sort((a, b) => b - a)
+})
+
+const filteredReplanting = computed(() => {
+  if (filterYear.value === 'Todos') return replanting.value
+
+  return replanting.value.filter(rep => {
+    if (!rep.planned_date) return false
+    return rep.planned_date.startsWith(filterYear.value)
+  })
+})
+
 // --- MATEMÁTICA PARA OS CARTÕES DE RESUMO ---
 const totalInventory = computed(() => {
   return mudas.value.reduce((total, muda) => total + muda.amount, 0)
 })
 
 const totalPlanted = computed(() => {
-  return replantios.value.reduce((total, rep) => total + rep.amount, 0)
+  return filteredReplanting.value.reduce((total, rep) => total + rep.amount, 0)
 })
 
 const totalCost = computed(() => {
-  return replantios.value.reduce((total, rep) => total + (rep.estimated_cost || 0), 0)
+  return filteredReplanting.value.reduce((total, rep) => total + (rep.estimated_cost || 0), 0)
 })
 
 
@@ -64,7 +98,7 @@ const chartStockData = computed(() => {
 // --- DADOS PARA O GRÁFICO DE BARRAS (ÁREAS) ---
 const chartDataAreas = computed(() => {
   const grouped = {}
-  replantios.value.forEach(r => {
+  filteredReplanting.value.forEach(r => {
     grouped[r.area_name] = (grouped[r.area_name] || 0) + r.amount
   })
 
@@ -81,7 +115,7 @@ const chartDataAreas = computed(() => {
 // --- DADOS PARA O GRÁFICO DE PIZZA (STATUS) ---
 const chartDataStatus = computed(() => {
   const grouped = {}
-  replantios.value.forEach(r => {
+  filteredReplanting.value.forEach(r => {
     grouped[r.status] = (grouped[r.status] || 0) + 1
   })
 
@@ -103,31 +137,89 @@ const chartDataStatus = computed(() => {
 // --- DADOS PARA O GRÁFICO DE LINHA ---
 const chartDataTime = computed(() => {
   const grouped = {}
-  const withDate = replantios.value
+  const withDate = filteredReplanting.value
     .filter(r => r.planned_date)
     .sort((a, b) => new Date(a.planned_date) - new Date(b.planned_date))
 
-  withDate.forEach(r => {
-    grouped[r.planned_date] = (grouped[r.planned_date] || 0) + r.amount
-  })
+  const uniqueDates = [...new Set(withDate.map(r => r.planned_date))]
 
+  const dateDone = withDate
+    .filter(r => r.status === 'Concluído')
+    .map(r => new Date(r.planned_date).getTime())
+
+  const lastDateDone = dateDone.length > 0 ? Math.max(...dateDone) : null
+
+  let accumuPlanned = 0
+  let accumuDone = 0
+
+  const dataPlanned = []
+  const dataDone = []
+
+  uniqueDates.forEach(date => {
+    const plantTheDay = withDate.filter(r => r.planned_date === date)
+    const totalDay = plantTheDay.reduce((sum, r) => sum + r.amount, 0)
+
+    const doneDay = plantTheDay
+      .filter(r => r.status === 'Concluído')
+      .reduce((sum, r) => sum + r.amount, 0)
+
+    accumuPlanned += totalDay
+    accumuDone += doneDay
+
+    dataPlanned.push(accumuPlanned)
+    // dataDone.push(accumuDone)
+    const actualTime = new Date(date).getTime()
+
+    if (lastDateDone !== null && actualTime > lastDateDone) {
+      dataDone.push(null)
+    } else {
+      dataDone.push(accumuDone)
+    }
+  })
   return {
-    labels: Object.keys(grouped).map(formatDate),
-    datasets: [{
-      label: 'Volume de Plantio ao Longo do Tempo',
-      borderColor: '#0284c7',
-      backgroundColor: 'rgba(2, 132, 199, 0.2)',
-      data: Object.values(grouped),
-      fill: true,
-      tension: 0.4
-    }]
+    labels: uniqueDates.map(formatDate),
+    datasets: [
+      {
+        label: 'Avanço Realizado (Concluídos)',
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+        data: dataDone,
+        fill: true,
+        tension: 0.4,
+        spanGaps: false
+      },
+      {
+        label: 'Curva Base (Total Planejado)',
+        borderColor: '#64748b',
+        borderDash: [5, 5],
+        backgroundColor: 'transparent',
+        data: dataPlanned,
+        fill: false,
+        tension: 0.4
+      }
+    ]
   }
+  // withDate.forEach(r => {
+  //   grouped[r.planned_date] = (grouped[r.planned_date] || 0) + r.amount
+  // })
+
+  // return {
+  //   labels: Object.keys(grouped).map(formatDate),
+  //   datasets: [{
+  //     label: 'Volume de Plantio ao Longo do Tempo',
+  //     borderColor: '#0284c7',
+  //     backgroundColor: 'rgba(2, 132, 199, 0.2)',
+  //     data: Object.values(grouped),
+  //     fill: true,
+  //     tension: 0.4
+  //   }]
+  // }  
 })
 
 // --- DADOS PARA A TABELA DE RECENTES ---
-const recentActivities = computed(() => {
-  return [...replantios.value].reverse().slice(0, 5)
-})
+// const recentActivities = computed(() => {
+//   return [...replanting.value].reverse().slice(0, 5)
+// })
 
 
 const getSpeciesName = (id) => {
@@ -144,14 +236,45 @@ const formatDate = (data) => {
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: true,
+      position: 'top',
+      labels: {
+        usePointStyle: true,
+        padding: 20
+      }
+    },
+    tooltip: {
+      mode: 'index',
+      intersect: false
+    }
+  },
   scales: {
     y: {
       ticks: {
         precision: 0,
+      },
+      beginAtZero: true,
+      title: {
+        display: true,
+        // text: 'Quantidade de Mudas Acumuladas'
       }
     }
   }
 }
+
+// const chartOptions = {
+//   responsive: true,
+//   maintainAspectRatio: false,
+//   scales: {
+//     y: {
+//       ticks: {
+//         precision: 0,
+//       }
+//     }
+//   }
+// }
 
 onMounted(() => {
   loadData()
@@ -160,10 +283,21 @@ onMounted(() => {
 
 <template>
   <div class="dashboard-container">
-    <h2 class="title">Visão Geral do Sistema</h2>
+    <div class="header-container">
+      <h2 class="title">Visão Geral do Sistema</h2>
+
+      <div v-if="!loading" class="filter-year">
+        <span class="filter-label">Analisar Ano:</span>
+        <select v-model="filterYear" class="select-year">
+          <option value="Todos">Histórico Completo</option>
+          <option v-for="year in availableYears" :key="year" :value="year">
+            {{ year }}
+          </option>
+        </select>
+      </div>
+    </div>
 
     <div v-if="loading" class="loading">A carregar dados do campo...</div>
-
     <div v-else>
       <div class="summary-cards">
         <div class="card summary-card">
@@ -180,19 +314,21 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="charts-grid">
-        <div class="card chart-card">
+      <div class="charts">
+        <div class="card chart-graphic">
           <h3>Evolução do Cronograma</h3>
-          <div class="chart-wrapper">
+          <div class="chart-wrapper-graphic">
             <Line :data="chartDataTime" :options="chartOptions" v-if="chartDataTime.labels.length > 0" />
             <p v-else class="no-data">Registre plantios com datas para ver a evolução.</p>
           </div>
         </div>
+      </div>
 
+      <div class="charts-grid">
         <div class="card chart-card">
           <h3>Status das Áreas</h3>
           <div class="chart-wrapper">
-            <Doughnut :data="chartDataStatus" :options="chartOptions" v-if="replantios.length > 0" />
+            <Doughnut :data="chartDataStatus" :options="chartOptions" v-if="replanting.length > 0" />
             <p v-else class="no-data">Nenhum status registado.</p>
           </div>
         </div>
@@ -204,14 +340,14 @@ onMounted(() => {
             <p v-else class="no-data">Sem dados no viveiro.</p>
           </div>
         </div>
+      </div>
 
-        <div class="card chart-card">
-          <h3>Plantio por Área / Setor</h3>
-          <div class="chart-wrapper">
-            <Bar :data="chartDataAreas" :options="{ ...chartOptions, plugins: { legend: { display: false } } }"
-              v-if="replantios.length > 0" />
-            <p v-else class="no-data">Nenhum plantio registado.</p>
-          </div>
+      <div class="card chart-graphic">
+        <h3>Plantio por Área / Setor</h3>
+        <div class="chart-wrapper-graphic">
+          <Bar :data="chartDataAreas" :options="{ ...chartOptions, plugins: { legend: { display: false } } }"
+            v-if="replanting.length > 0" />
+          <p v-else class="no-data">Nenhum plantio registado.</p>
         </div>
       </div>
 
@@ -228,7 +364,7 @@ onMounted(() => {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="activity in recentActivities" :key="activity.id">
+            <tr v-for="activity in sortedReplanting" :key="activity.id">
               <td>{{ formatDate(activity.planned_date) }}</td>
               <td><strong>{{ activity.area_name }}</strong></td>
               <td>{{ getSpeciesName(activity.muda_id) }}</td>
@@ -236,7 +372,7 @@ onMounted(() => {
               <td><span :class="['badge', activity.status.replace(' ', '-').toLowerCase()]">{{ activity.status }}</span>
               </td>
             </tr>
-            <tr v-if="recentActivities.length === 0">
+            <tr v-if="sortedReplanting.length === 0">
               <td colspan="5" style="text-align: center;" class="no-data">Nenhuma movimentação recente.</td>
             </tr>
           </tbody>
@@ -254,8 +390,15 @@ onMounted(() => {
   padding-bottom: 40px;
 }
 
-.title {
+.header-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 25px;
+}
+
+.title {
+  margin-bottom: 0;
   color: #1e293b;
 }
 
@@ -270,7 +413,7 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 20px;
-  margin-bottom: 30px;
+  margin-bottom: 15px;
 }
 
 .summary-card {
@@ -304,6 +447,13 @@ onMounted(() => {
   color: #ea580c;
 }
 
+.chart-graphic {
+  padding: 20px;
+  display: flexbox;
+  flex-direction: column;
+  align-items: center;
+  min-height: 500px;
+}
 
 .charts-grid {
   display: grid;
@@ -331,7 +481,16 @@ onMounted(() => {
 
 .chart-wrapper {
   position: relative;
-  height: 280px;
+  height: 400px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-wrapper-graphic {
+  position: relative;
+  height: 500px;
   width: 100%;
   display: flex;
   justify-content: center;
@@ -393,5 +552,37 @@ onMounted(() => {
 .badge.concluído {
   background: #d1fae5;
   color: #059669;
+}
+
+.filter-year {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 8px 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filter-label {
+  font-weight: bold;
+  color: #475569;
+}
+
+.select-year {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #1e293b;
+  font-weight: bold;
+  cursor: pointer;
+  outline: none;
+  transition: 0.2s;
+}
+
+.select-year:focus {
+  border-color: #2d6a4f;
+  box-shadow: 0 0 0 2px rgba(45, 106, 79, 0.2);
 }
 </style>

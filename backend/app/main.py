@@ -313,3 +313,93 @@ def create_replantio(
     db.commit()
     db.refresh(new_replantio)
     return new_replantio
+
+@app.put("/replantios/{replantio_id}", response_model=schemas.ReplantioResponse)
+def update_replantio(
+    replantio_id: int,
+    replantio_updated: schemas.ReplantioCreate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+        if current_user.role != "admin":
+            raise HTTPException(
+                status_code=403,
+                detail="Acesso negado. Apenas administradores podem editar replantios"
+            )
+    
+        replantio = db.query(models.Replantio).filter(models.Replantio.id == replantio_id).first()
+        if not replantio:
+            raise HTTPException(status_code=404, detail="Replantio não encontrado.")
+        
+        if replantio.muda_id == replantio_updated.muda_id:
+            difference = replantio_updated.amount - replantio.amount
+
+            if difference != 0:
+                muda_in_stock = db.query(models.Muda).filter(models.Muda.id == replantio.muda_id).first()
+
+                if not muda_in_stock:
+                    raise HTTPException(status_code=404, detail="Muda vinculada a este replantio não foi encontrada no estoque.")
+
+                if difference > 0 and muda_in_stock.amount < difference:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Estoque insuficiente. Você precisa de mais {difference} mudas, mas só existem {muda_in_stock.amount} no estoque."
+                    )
+                muda_in_stock.amount -= difference
+
+        else:
+            old_muda = db.query(models.Muda).filter(models.Muda.id == replantio.muda_id).first()
+            new_muda = db.query(models.Muda).filter(models.Muda.id == replantio_updated.muda_id).first()
+
+            if not new_muda:
+                raise HTTPException(status_code=404, detail="Nova muda não encontrada no estoque.")
+
+            if new_muda.amount < replantio_updated.amount:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Estoque insuficiente na nova muda. Só existem {new_muda.amount} disponíveis."
+                )
+
+            if old_muda:
+                old_muda.amount += replantio.amount
+
+            new_muda.amount -= replantio_updated.amount
+
+        replantio.muda_id = replantio_updated.muda_id
+        replantio.area_name = replantio_updated.area_name
+        replantio.amount = replantio_updated.amount
+        replantio.status = replantio_updated.status
+        replantio.planned_date = replantio_updated.planned_date
+        replantio.actual_date = replantio_updated.actual_date
+        replantio.estimated_cost = replantio_updated.estimated_cost
+        replantio.actual_cost = replantio_updated.actual_cost
+        replantio.surviving_amount = replantio_updated.surviving_amount
+
+        db.commit()
+        db.refresh(replantio)
+        return replantio
+
+
+@app.delete("/replantios/{replantio_id}")
+def delete_replantio(
+    replantio_id: int,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
+):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=404,
+            detail="Acesso negado. Apenas administradores podem excluir replantios"
+        )
+    
+    replantio = db.query(models.Replantio).filter(models.Replantio.id == replantio_id).first()
+    if not replantio:
+        raise HTTPException(status_code=404, detail="Replantio não encontrado.")
+    
+    muda_in_stock = db.query(models.Muda).filter(models.Muda.id == replantio.muda_id).first()
+    if muda_in_stock:
+        muda_in_stock.amount += replantio.amount
+
+    db.delete(replantio)
+    db.commit()
+    return {"message": "Replantio excluído com sucesso."}
